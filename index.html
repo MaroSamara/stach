@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="site.css">
+<link rel="stylesheet" href="motion.css">
 </head>
 <body>
 
@@ -74,44 +75,51 @@
   </div>
 </div>
 
-<!-- TRACKER -->
-<section class="feature" id="tracker">
+<!-- STORY: sticky phone, screens change as you scroll -->
+<section class="story" id="tracker">
   <div class="wrap">
-    <div class="text reveal">
-      <p class="kicker" data-i18n="tr.k">Budget</p>
-      <h2 data-i18n="tr.h">Your rent is paid. So what's left?</h2>
-      <p class="sub" data-i18n="tr.s">Add your income and monthly bills once. Stach does the maths every day, so you always know what's free to spend, not just what's in your account.</p>
-      <ul class="points">
-        <li><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div><b data-i18n="tr.p1">Money left over this month</b><span data-i18n="tr.p1s">Income minus bills and what you've spent, updated as you go.</span></div></li>
-        <li><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><b data-i18n="tr.p2">Safe to spend today</b><span data-i18n="tr.p2s">Your leftover split across the days left in the month.</span></div></li>
-        <li><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div><b data-i18n="tr.p3">Log it in two taps</b><span data-i18n="tr.p3s">Amount, category, done. Bills remind you before they're due.</span></div></li>
-      </ul>
+    <div class="story-steps">
+      <div class="step" data-shot="0">
+        <p class="kicker" data-i18n="tr.k">Budget</p>
+        <h2 data-i18n="tr.h">Your rent is paid. So what's left?</h2>
+        <p class="sub" data-i18n="tr.s">Add your income and monthly bills once. Stach does the maths every day, so you always know what's free to spend, not just what's in your account.</p>
+        <div class="phone step-phone"><img src="img/home-light.webp" alt="Stach home screen showing money left over this month" loading="lazy" width="780" height="1696"></div>
+      </div>
+      <div class="step" data-shot="1">
+        <p class="kicker" data-i18n="st.2k">Quick log</p>
+        <h2 data-i18n="tr.p3">Log it in two taps</h2>
+        <p class="sub" data-i18n="st.2s">Type the amount, pick a category, done. Your Left over and Safe to spend update straight away.</p>
+        <div class="phone step-phone"><img src="img/quicklog.webp" alt="Logging €5 of groceries with the keypad" loading="lazy" width="780" height="1696"></div>
+      </div>
+      <div class="step" data-shot="2">
+        <p class="kicker" data-i18n="go.k">Saving up</p>
+        <h2 data-i18n="go.h">Watch your goals fill up.</h2>
+        <p class="sub" data-i18n="go.s">Set goals like a flight home or a new laptop. When extra money comes in, send it straight to a goal and watch the jar fill. An emergency fund keeps you covered when life happens.</p>
+        <div class="phone step-phone"><img src="img/goal.webp" alt="A savings goal jar filled to 100% with the message Goal reached" loading="lazy" width="780" height="1696"></div>
+      </div>
+      <div class="step" data-shot="3">
+        <p class="kicker" data-i18n="st.4k">Insights</p>
+        <h2 data-i18n="st.4h">See where it all went.</h2>
+        <p class="sub" data-i18n="st.4s">A breakdown by category shows where this month's money went, so next month goes better.</p>
+        <div class="phone step-phone"><img src="img/donut.webp" alt="Spending breakdown chart by category" loading="lazy" width="780" height="1696"></div>
+      </div>
     </div>
-    <div class="shots reveal">
-      <div class="phone"><img src="img/home-light.webp" alt="Stach home screen showing money left over this month" loading="lazy" width="780" height="1696"></div>
-      <div class="phone offset"><img src="img/quicklog.webp" alt="Logging €5 of groceries with the keypad" loading="lazy" width="780" height="1696"></div>
+    <div class="story-stage" aria-hidden="true">
+      <div class="story-sticky">
+        <div class="phone story-phone">
+          <div class="screens">
+            <img class="on" src="img/home-light.webp" alt="" width="780" height="1696">
+            <img src="img/quicklog.webp" alt="" width="780" height="1696" loading="lazy">
+            <img src="img/goal.webp" alt="" width="780" height="1696" loading="lazy">
+            <img src="img/donut.webp" alt="" width="780" height="1696" loading="lazy">
+          </div>
+        </div>
+        <div class="story-dots"><i class="on"></i><i></i><i></i><i></i></div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- GOALS -->
-<section class="feature flip" style="padding-top:0">
-  <div class="wrap">
-    <div class="text reveal">
-      <p class="kicker" data-i18n="go.k">Saving up</p>
-      <h2 data-i18n="go.h">Watch your goals fill up.</h2>
-      <p class="sub" data-i18n="go.s">Set goals like a flight home or a new laptop. When extra money comes in, send it straight to a goal and watch the jar fill. An emergency fund keeps you covered when life happens.</p>
-      <ul class="points">
-        <li><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></div><div><b data-i18n="go.p1">Goals with a jar you can see</b><span data-i18n="go.p1s">Every euro you add shows up in the jar.</span></div></li>
-        <li><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/></svg></div><div><b data-i18n="go.p2">An emergency fund that stays separate</b><span data-i18n="go.p2s">Saved money isn't counted as spending money.</span></div></li>
-      </ul>
-    </div>
-    <div class="shots reveal">
-      <div class="phone"><img src="img/goal.webp" alt="A savings goal jar filled to 100% with the message Goal reached" loading="lazy" width="780" height="1696"></div>
-      <div class="phone offset"><img src="img/donut.webp" alt="Spending breakdown chart by category" loading="lazy" width="780" height="1696"></div>
-    </div>
-  </div>
-</section>
 
 <!-- SPLIT -->
 <section class="dark" id="split">
@@ -149,22 +157,29 @@
   </div>
 </section>
 
-<!-- CARD THEME + MORE -->
+<!-- CARD PICKER: try the metal cards, the page takes on the colour -->
+<section class="cardpick" id="cards">
+  <div class="wrap">
+    <div class="reveal" style="text-align:center; max-width:720px; margin:0 auto">
+      <p class="kicker" data-i18n="ca.k">Make it yours</p>
+      <h2 data-i18n="ca.h">Pick your card. The whole app follows.</h2>
+      <p class="sub" style="margin:0 auto" data-i18n="ca.try">Tap a card to try it. This page changes colour too, just like the app does.</p>
+    </div>
+    <div class="deck" id="deck" tabindex="0" aria-label="Card picker. Use the arrow keys to browse."></div>
+    <div class="deck-ui">
+      <button type="button" class="round" id="deck-prev" aria-label="Previous card"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="deck-name"><b id="deck-title">Rose Gold</b><span id="deck-sub">Brushed rose gold</span></div>
+      <button type="button" class="round" id="deck-next" aria-label="Next card"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+    </div>
+    <div style="text-align:center; margin-top:18px"><button type="button" class="btn accent" id="deck-use">Use Rose Gold</button></div>
+    <p class="deck-note" data-i18n="ca.note">Light or dark mode, and Face ID to keep it private.</p>
+  </div>
+  <div class="deck-toast" id="deck-toast" role="status" aria-live="polite"></div>
+</section>
+
+<!-- TRUST TILES -->
 <section style="padding-top:0">
   <div class="wrap">
-    <div class="feature" style="padding:0">
-      <div class="wrap" style="padding:0">
-        <div class="text reveal">
-          <p class="kicker" data-i18n="ca.k">Make it yours</p>
-          <h2 data-i18n="ca.h">Pick your card. The whole app follows.</h2>
-          <p class="sub" data-i18n="ca.s">Choose a metal card, from Rose Gold to Sapphire, and Stach takes on its colour everywhere. Light or dark mode, and Face ID to keep it private.</p>
-        </div>
-        <div class="shots reveal">
-          <div class="phone"><img src="img/cards.webp" alt="Choosing the Sapphire card" loading="lazy" width="780" height="1696"></div>
-          <div class="phone offset"><img src="img/newcard.webp" alt="Your new card: Sapphire" loading="lazy" width="780" height="1696"></div>
-        </div>
-      </div>
-    </div>
     <div class="cards-grid">
       <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M11 18h2"/></svg></div><h3 data-i18n="t1.h">Your data stays on your phone</h3><p data-i18n="t1.p">Your budget lives on your iPhone. Only the shared parts of Split Bill use our server.</p></div>
       <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg></div><h3 data-i18n="t2.h">No bank login needed</h3><p data-i18n="t2.p">Stach never asks for your bank details and never moves money. Payments happen in your own banking app.</p></div>
@@ -257,6 +272,10 @@ var WAITLIST_ENDPOINT = "https://formspree.io/f/mgaoknay";
 var CONTACT_EMAIL = "stach.support@gmail.com";
 
 var DE = {
+ "st.2k":"Schnell eintragen","st.2s":"Betrag eintippen, Kategorie wählen, fertig. Dein Übrig und dein Tagesbudget passen sich sofort an.",
+ "st.4k":"Überblick","st.4h":"Sieh, wohin alles gegangen ist.","st.4s":"Eine Aufteilung nach Kategorien zeigt, wohin das Geld diesen Monat gegangen ist, damit der nächste besser läuft.",
+ "ca.try":"Tippe auf eine Karte und probier sie aus. Diese Seite ändert ihre Farbe auch, genau wie die App.",
+ "ca.note":"Hell oder dunkel, und Face ID, damit alles privat bleibt.",
  "nav.tracker":"Budget","nav.split":"Rechnungen teilen","nav.eats":"Campus Eats","nav.partners":"Für Restaurants","nav.faq":"FAQ","nav.cta":"Auf die Warteliste",
  "hero.eyebrow":"Für Studierende im Ausland · Bald fürs iPhone",
  "hero.title":"Wisse, was dir <em>wirklich</em> bleibt.",
@@ -359,5 +378,7 @@ if("IntersectionObserver" in window){
   document.querySelectorAll(".reveal").forEach(function(el){ io.observe(el); });
 } else { document.querySelectorAll(".reveal").forEach(function(el){ el.classList.add("in"); }); }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
+<script src="motion.js" defer></script>
 </body>
 </html>
