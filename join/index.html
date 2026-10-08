@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<!-- Only lets this page load Google's Firebase scripts and talk to Firebase; nothing else can run here. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://www.gstatic.com; connect-src https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com wss://*.firebaseio.com; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Join a split bill · Stach</title>
+<meta name="description" content="Tick what you had and see what you owe. No app needed.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23111113%22/%3E%3Cpath%20d%3D%22M32%2032%20V14%20A18%2018%200%201%200%2050%2032%20Z%22%20fill%3D%22%23f5f5f7%22/%3E%3Cpath%20d%3D%22M35%2029%20V11%20A18%2018%200%200%201%2053%2029%20Z%22%20fill%3D%22%23D9C58F%22/%3E%3C/svg%3E">
+<style>
+  :root { --bg:#f5f5f7; --card:#fff; --ink:#1d1d1f; --muted:#6e6e73; --line:rgba(0,0,0,.08);
+          --blue:#007aff; --green:#34c759; --orange:#ff9500; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#000; --card:#1c1c1e; --ink:#f5f5f7; --muted:#a0a0a5; --line:rgba(255,255,255,.1);
+            --blue:#0a84ff; --green:#30d158; --orange:#ff9f0a; }
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif; }
+  main { max-width:520px; margin:0 auto; padding:28px 16px 140px; }
+  .top { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:14px; }
+  .mark { width:28px; height:28px; border-radius:8px; background:var(--blue); display:grid; place-items:center; }
+  h1 { font-size:30px; letter-spacing:-.02em; margin:18px 0 2px; }
+  .sub { color:var(--muted); margin:0 0 18px; }
+  .card { background:var(--card); border-radius:18px; padding:16px; margin:12px 0; box-shadow:0 2px 10px rgba(0,0,0,.04); }
+  label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+  input { width:100%; font:inherit; font-size:17px; padding:14px; border-radius:12px; border:1.5px solid var(--line);
+          background:var(--bg); color:var(--ink); outline:none; }
+  input:focus { border-color:var(--blue); }
+  button.primary { width:100%; margin-top:12px; font:inherit; font-weight:600; font-size:17px; border:0; border-radius:999px;
+                   padding:15px; background:var(--blue); color:#fff; cursor:pointer; transition:transform .12s, opacity .2s; }
+  button.primary:active { transform:scale(.98); }
+  button.primary:disabled { opacity:.4; }
+  .item { display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line); cursor:pointer;
+          user-select:none; transition:background .2s; border-radius:10px; }
+  .item:last-child { border-bottom:0; }
+  .check { width:28px; height:28px; flex:none; border-radius:50%; border:2px solid var(--line); display:grid; place-items:center;
+           transition:all .25s cubic-bezier(.3,1.4,.5,1); }
+  .item.mine .check { background:var(--green); border-color:var(--green); transform:scale(1.08); }
+  .check svg { opacity:0; transform:scale(.3); transition:all .25s cubic-bezier(.3,1.4,.5,1); }
+  .item.mine .check svg { opacity:1; transform:scale(1); }
+  .name { font-weight:500; }
+  .who { font-size:13px; color:var(--muted); }
+  .price { margin-left:auto; font-variant-numeric:tabular-nums; font-weight:600; }
+  .bar { position:fixed; left:0; right:0; bottom:0; padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+         background:color-mix(in srgb, var(--card) 88%, transparent); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+         border-top:1px solid var(--line); }
+  .bar .inner { max-width:520px; margin:0 auto; display:flex; align-items:center; gap:12px; }
+  .total { font-size:13px; color:var(--muted); }
+  .total b { display:block; font-size:24px; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .pay { margin-left:auto; font:inherit; font-weight:600; border:0; border-radius:999px; padding:13px 18px; cursor:pointer;
+         background:var(--blue); color:#fff; transition:all .25s; }
+  .pay.done { background:var(--green); }
+  .note { color:var(--muted); font-size:14px; text-align:center; }
+  .error { color:var(--orange); }
+  .hidden { display:none; }
+  .people { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { font-size:13px; padding:5px 10px; border-radius:999px; background:color-mix(in srgb, var(--blue) 12%, transparent); color:var(--blue); }
+  .chip.paid { background:color-mix(in srgb, var(--green) 14%, transparent); color:var(--green); }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div class="mark"><svg width="16" height="16" viewBox="0 0 32 32"><path d="M16 16 L16 3 A13 13 0 1 0 29 16 Z" fill="#fff"/><path d="M18 14 L18 2 A12 12 0 0 1 30 14 Z" fill="#D9C58F"/></svg></div>
+    Stach · Split bill
+  </div>
+
+  <!-- Step 1: your name -->
+  <section id="join" class="hidden">
+    <h1 id="joinTitle">Join the split</h1>
+    <p class="sub">No app needed. Pick what you had and see what you owe.</p>
+    <div class="card">
+      <label for="nameInput">Your name</label>
+      <input id="nameInput" autocomplete="given-name" placeholder="So your friends know it's you" maxlength="40">
+      <button class="primary" id="joinBtn" disabled>Join</button>
+    </div>
+  </section>
+
+  <!-- Step 2: the group -->
+  <section id="group" class="hidden">
+    <h1 id="title"></h1>
+    <p class="sub" id="groupSub">Tap everything you had. Shared items split evenly.</p>
+    <div class="card" id="items"></div>
+    <div class="card">
+      <label>In this group</label>
+      <div class="people" id="people"></div>
+    </div>
+    <p class="note">Updates live for everyone. Get the app for your budget, reminders and more.</p>
+  </section>
+
+  <section id="status" class="card note">Loading…</section>
+</main>
+
+<div class="bar hidden" id="bar">
+  <div class="inner">
+    <div class="total">Your share<b id="myTotal">€0.00</b></div>
+    <button class="pay" id="payBtn">I've paid</button>
+  </div>
+</div>
+
+<script type="module">
+// Same Firebase project as the app. If sign-in fails from the web, add a
+// Web app in Firebase console > Project settings and paste its apiKey/appId here.
+const firebaseConfig = {
+  apiKey: "AIzaSyBT0F7nGBJ4m7iTRmBDoDTQXKpkvcD3lHI",
+  authDomain: "studdybuddy-46b74.firebaseapp.com",
+  projectId: "studdybuddy-46b74",
+  storageBucket: "studdybuddy-46b74.firebasestorage.app",
+  messagingSenderId: "494365355163",
+};
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, arrayUnion, arrayRemove, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const $ = (id) => document.getElementById(id);
+const code = (new URLSearchParams(location.search).get("code") || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+const show = (el, on) => el.classList.toggle("hidden", !on);
+const status = (msg, isError) => { $("status").textContent = msg; $("status").classList.toggle("error", !!isError); show($("status"), !!msg); };
+
+let currency = ((new URLSearchParams(location.search).get("cur")) || "EUR").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3);
+if (currency.length !== 3) currency = "EUR";
+const money = (v) => {
+  try { return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(v || 0); }
+  catch { return (v || 0).toFixed(2) + " " + currency; }
+};
+
+if (!code) { status("This link is missing its invite code. Ask your friend to send it again.", true); throw new Error("no code"); }
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const groupRef = doc(db, "liveSplitGroups", code);
+
+let me = null, group = null, items = [], people = [], guests = [];
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    try { await signInAnonymously(auth); } catch (e) { status("Couldn't connect. Check your internet and reload.", true); }
+    return;
+  }
+  me = user.uid;
+  try {
+    const snap = await getDoc(groupRef);
+    if (!snap.exists()) { status("This split doesn't exist anymore. Check the link with your friend.", true); return; }
+    group = snap.data();
+    const mine = await getDoc(doc(groupRef, "participants", me));
+    if (mine.exists()) { openGroup(); } else { askName(); }
+  } catch (e) {
+    status("Couldn't open this split. Reload to try again.", true);
+  }
+});
+
+function askName() {
+  status("");
+  $("joinTitle").textContent = `Join “${group.title || "Split bill"}”`;
+  show($("join"), true);
+  const input = $("nameInput");
+  input.value = localStorage.getItem("sb.webName") || "";
+  const sync = () => { $("joinBtn").disabled = input.value.trim().length < 1; };
+  input.addEventListener("input", sync); sync(); input.focus();
+  $("joinBtn").onclick = async () => {
+    if (group.isActive === false) { status("This split is closed.", true); return; }
+    const name = input.value.trim();
+    try { localStorage.setItem("sb.webName", name); } catch {}
+    $("joinBtn").disabled = true;
+    try {
+      await setDoc(doc(groupRef, "participants", me), { id: me, name, joinedAt: serverTimestamp(), hasPaid: false, viaWeb: true }, { merge: true });
+      show($("join"), false);
+      openGroup();
+    } catch (e) { $("joinBtn").disabled = false; status("Couldn't join. Try again.", true); }
+  };
+}
+
+function openGroup() {
+  status("");
+  $("title").textContent = group.title || "Split bill";
+  show($("group"), true); show($("bar"), true);
+  onSnapshot(groupRef, (s) => { group = s.data() || group; render(); });
+  onSnapshot(collection(groupRef, "items"), (s) => { items = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); });
+  onSnapshot(collection(groupRef, "participants"), (s) => { people = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); });
+  onSnapshot(collection(groupRef, "guests"), (s) => { guests = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); });
+  $("payBtn").onclick = async () => {
+    const paid = !(people.find(p => p.id === me)?.hasPaid);
+    if (navigator.vibrate) navigator.vibrate(10);
+    await updateDoc(doc(groupRef, "participants", me), { hasPaid: paid });
+  };
+}
+
+function nameOf(id) { return people.find(p => p.id === id)?.name || guests.find(g => g.id === id)?.name || "Someone"; }
+
+function myShare() {
+  const subtotal = items.reduce((s, i) => s + (i.price || 0), 0);
+  const mineSub = items.reduce((s, i) => {
+    const on = (i.assignedParticipantIDs || []);
+    const n = on.length + (i.assignedGuestIDs || []).length;
+    return on.includes(me) && n ? s + i.price / n : s;
+  }, 0);
+  const extra = (group.taxAmount || 0) + (group.tipAmount || 0);
+  return mineSub + (subtotal > 0 ? extra * (mineSub / subtotal) : 0);
+}
+
+function render() {
+  const closed = group.isActive === false;
+  $("groupSub").textContent = closed ? "This split is closed. Final totals below." : "Tap everything you had. Shared items split evenly.";
+  const list = $("items");
+  list.innerHTML = "";
+  if (!items.length) list.innerHTML = '<p class="note">No items yet. They\'ll appear here the moment they\'re added.</p>';
+  for (const item of items) {
+    const on = item.assignedParticipantIDs || [];
+    const mine = on.includes(me);
+    const all = [...on, ...(item.assignedGuestIDs || [])];
+    const row = document.createElement("div");
+    row.className = "item" + (mine ? " mine" : "");
+    row.setAttribute("role", "checkbox");
+    row.setAttribute("aria-checked", mine);
+    row.tabIndex = 0;
+    row.innerHTML = `
+      <div class="check"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 7.5l2.5 2.5L11 4.5" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div><div class="name"></div><div class="who"></div></div>
+      <div class="price"></div>`;
+    row.querySelector(".name").textContent = item.name || "Item";
+    row.querySelector(".who").textContent = all.length ? all.map(id => id === me ? "You" : nameOf(id)).join(", ") : "Nobody yet";
+    row.querySelector(".price").textContent = money(item.price);
+    const toggle = async () => {
+      if (closed) return;
+      if (navigator.vibrate) navigator.vibrate(8);
+      row.classList.toggle("mine");
+      try {
+        await updateDoc(doc(groupRef, "items", item.id), { assignedParticipantIDs: mine ? arrayRemove(me) : arrayUnion(me) });
+      } catch (e) { row.classList.toggle("mine"); status("Couldn't save that tap. Try again.", true); }
+    };
+    row.onclick = toggle;
+    row.onkeydown = (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(); } };
+    list.appendChild(row);
+  }
+  const ppl = $("people");
+  ppl.innerHTML = "";
+  for (const p of [...people, ...guests]) {
+    const chip = document.createElement("span");
+    chip.className = "chip" + (p.hasPaid ? " paid" : "");
+    chip.textContent = (p.id === me ? "You" : p.name) + (p.hasPaid ? " ✓" : "");
+    ppl.appendChild(chip);
+  }
+  $("myTotal").textContent = money(myShare());
+  const paid = !!people.find(p => p.id === me)?.hasPaid;
+  $("payBtn").textContent = paid ? "Paid ✓" : "I've paid";
+  $("payBtn").classList.toggle("done", paid);
+  $("payBtn").disabled = closed;
+}
+</script>
+</body>
+</html>
