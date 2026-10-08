@@ -102,3 +102,12 @@ html.lenis, html.lenis body{ height:auto; }
   .dark{ clip-path:none; }
   .mcard, .mcard .face{ transition:none; }
 }
+
+/* text selection in the brand colour, and no full-width blue bars */
+::selection{ background:color-mix(in srgb, var(--accent) 22%, transparent); color:inherit; }
+.dark ::selection, .cta ::selection{ background:color-mix(in srgb, var(--accent-2) 40%, transparent); color:#fff; }
+.faq summary, .nav, .lang, .btn, .round, .deck, .story-dots, .strip{ -webkit-user-select:none; user-select:none; }
+.faq details p{ margin-right:44px; }
+/* answers open smoothly */
+.faq details[open] p{ animation:faqIn .5s cubic-bezier(.16,1,.3,1); }
+@keyframes faqIn{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:none; } }
