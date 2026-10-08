@@ -51,36 +51,23 @@ html.lenis, html.lenis body{ height:auto; }
 
 /* ---------- card picker ---------- */
 .cardpick{ position:relative; overflow:hidden; }
-.cardpick::before{ content:""; position:absolute; left:50%; top:52%; width:900px; height:600px; transform:translate(-50%,-50%); border-radius:50%;
-  background:radial-gradient(closest-side, color-mix(in srgb, var(--accent-2) 35%, transparent), transparent); filter:blur(40px); opacity:.7; pointer-events:none; transition:background .9s; }
+.cardpick{ background:radial-gradient(60% 45% at 50% 58%, color-mix(in srgb, var(--accent-2) 22%, transparent), transparent 70%); }
 .deck{ position:relative; height:470px; margin-top:40px; perspective:1600px; outline:none; touch-action:pan-y; user-select:none; -webkit-user-select:none; }
-.mcard{ --w:236px; position:absolute; left:50%; top:50%; width:var(--w); aspect-ratio:54/85.6; margin-left:calc(var(--w) / -2); margin-top:calc(var(--w) * 85.6 / 54 / -2);
-  border:0; padding:0; border-radius:16px; cursor:pointer; color:var(--ink-on); background:none;
-  transition:transform .75s cubic-bezier(.16,1,.3,1), opacity .5s, filter .5s; transform-style:preserve-3d; }
-.mcard .face{ position:absolute; inset:0; border-radius:16px; overflow:hidden; background:linear-gradient(150deg, var(--c0), var(--c1) 55%, var(--c2));
-  box-shadow:0 30px 60px -20px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.08) inset, 0 1px 0 rgba(255,255,255,.35) inset; transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:transform .25s ease-out; }
-.mcard .tex{ position:absolute; inset:0; opacity:.5; mix-blend-mode:overlay; }
-.mcard.brushed .tex{ background:repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 1px, rgba(0,0,0,.05) 1px 2px, transparent 2px 4px); }
-.mcard.carbon .tex{ opacity:.35; background:repeating-linear-gradient(45deg, rgba(255,255,255,.07) 0 3px, transparent 3px 6px), repeating-linear-gradient(-45deg, rgba(0,0,0,.25) 0 3px, transparent 3px 6px); }
-.mcard.holo .tex{ opacity:.6; mix-blend-mode:soft-light; background:conic-gradient(from 210deg at 70% 30%, #ff9de2, #9be7ff, #b2ffb5, #fff6a8, #ff9de2); }
-.mcard.pearl .tex{ opacity:.55; mix-blend-mode:soft-light; background:radial-gradient(circle at 30% 20%, #fff, transparent 50%), linear-gradient(120deg, #f6e9ff, #e9fbff, #fff5e5); }
-.mcard .shine{ position:absolute; inset:-40%; background:radial-gradient(circle at var(--sx,30%) var(--sy,20%), rgba(255,255,255,.55), rgba(255,255,255,0) 35%); mix-blend-mode:overlay; transition:opacity .3s; }
-.mcard .sweep{ position:absolute; inset:0; background:linear-gradient(105deg, transparent 35%, rgba(255,255,255,.65) 50%, transparent 65%); transform:translateX(-120%); }
-.mcard.swept .sweep{ animation:sweep 1.1s cubic-bezier(.16,1,.3,1); }
-@keyframes sweep{ to{ transform:translateX(120%); } }
-.mcard .emblem{ position:absolute; right:-22%; bottom:14%; width:78%; opacity:.13; color:var(--ink-on); }
-.mcard .brand{ position:absolute; left:9%; top:6.5%; display:flex; align-items:center; gap:6px; font-weight:800; letter-spacing:.18em; font-size:13px; }
-.mcard .brand svg{ width:17px; height:17px; }
-.mcard .tier{ position:absolute; left:9%; top:12.5%; font-size:7.5px; letter-spacing:.24em; font-weight:700; opacity:.7; text-transform:uppercase; }
-.mcard .chip{ position:absolute; left:9%; top:42%; width:20%; aspect-ratio:1.3; border-radius:5px; background:linear-gradient(135deg,#f3dfa0,#c9a659 55%,#e9d08e); box-shadow:inset 0 0 0 1px rgba(0,0,0,.15); }
-.mcard .chip::after{ content:""; position:absolute; inset:22% 30%; border:1px solid rgba(0,0,0,.25); border-radius:3px; }
-.mcard .nfc{ position:absolute; left:33%; top:43.5%; width:9%; opacity:.75; }
-.mcard .since{ position:absolute; left:9%; bottom:15%; font-size:6.5px; letter-spacing:.2em; font-weight:700; opacity:.65; line-height:1.3; }
-.mcard .since b{ font-size:11px; letter-spacing:.05em; margin-left:4px; }
-.mcard .holder{ position:absolute; left:9%; bottom:7%; font-size:11px; letter-spacing:.22em; font-weight:700; text-shadow:0 1px 0 rgba(255,255,255,.18), 0 -1px 0 rgba(0,0,0,.25); }
-.mcard.lift{ animation:lift 1.1s cubic-bezier(.16,1,.3,1); }
-@keyframes lift{ 0%{ translate:0 0; } 35%{ translate:0 -34px; scale:1.06; } 100%{ translate:0 0; scale:1; } }
-.mcard:focus-visible{ outline:3px solid var(--accent); outline-offset:6px; }
+.mcard{ --w:236px; position:absolute; left:50%; top:50%; width:calc(var(--w) * 296 / 236); aspect-ratio:296/434;
+  margin-left:calc(var(--w) * -148 / 236); margin-top:calc(var(--w) * -217 / 236);
+  border:0; padding:0; background:none; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  transition:transform .7s cubic-bezier(.16,1,.3,1), opacity .45s ease; will-change:transform, opacity; backface-visibility:hidden; }
+.mcard .tilt{ position:absolute; inset:0; display:block; transition:transform .45s cubic-bezier(.16,1,.3,1); will-change:transform; }
+.mcard img{ width:100%; height:100%; display:block; pointer-events:none; -webkit-user-drag:none; }
+.mcard .shine, .mcard .sweep{ position:absolute; left:10.14%; right:10.14%; top:6.91%; bottom:6.91%; border-radius:7%/4.5%; overflow:hidden; pointer-events:none; }
+.mcard .shine{ opacity:0; transition:opacity .35s; }
+.mcard .shine i{ position:absolute; left:-40%; top:-40%; width:180%; height:180%; background:radial-gradient(circle at 50% 50%, rgba(255,255,255,.38), rgba(255,255,255,0) 38%); will-change:transform; }
+.mcard .sweep::before{ content:""; position:absolute; top:0; bottom:0; left:-60%; width:60%; background:linear-gradient(105deg, transparent, rgba(255,255,255,.6), transparent); transform:translateX(0); }
+.mcard.swept .sweep::before{ animation:sweep2 1s cubic-bezier(.16,1,.3,1); }
+@keyframes sweep2{ to{ transform:translateX(330%); } }
+.mcard.lift .tilt{ animation:lift2 1s cubic-bezier(.16,1,.3,1); }
+@keyframes lift2{ 35%{ transform:translateY(-30px) scale(1.05); } 100%{ transform:none; } }
+.mcard:focus-visible{ outline:3px solid var(--accent); outline-offset:-20px; border-radius:24px; }
 .deck-ui{ display:flex; align-items:center; justify-content:center; gap:22px; margin-top:6px; }
 .deck-name{ text-align:center; min-width:170px; }
 .deck-name b{ display:block; font-size:22px; letter-spacing:-.02em; }
@@ -100,7 +87,7 @@ html.lenis, html.lenis body{ height:auto; }
   .reveal{ filter:none; }
   [data-rise]{ transform:none !important; }
   .dark{ clip-path:none; }
-  .mcard, .mcard .face{ transition:none; }
+  .mcard, .mcard .tilt{ transition:none; }
 }
 
 /* text selection in the brand colour, and no full-width blue bars */
@@ -115,7 +102,7 @@ html.lenis, html.lenis body{ height:auto; }
 /* while dragging, cards follow the finger with no lag */
 .deck{ cursor:grab; }
 .deck.dragging{ cursor:grabbing; }
-.deck.dragging .mcard{ transition:opacity .2s, filter .2s; }
+.deck.dragging .mcard{ transition:none; }
 /* story screens are driven every frame by the scroll position */
 .story-phone .screens img{ transition:none; opacity:0; }
 .story-phone .screens img.on{ opacity:1; }

@@ -108,10 +108,9 @@
   var isDe = function(){ return (window.lang || document.documentElement.lang) === "de"; };
   var els = CARDS.map(function(c, i){
     var b = document.createElement("button");
-    b.type = "button"; b.className = "mcard " + c.tex;
-    b.style.setProperty("--c0", c.c[0]); b.style.setProperty("--c1", c.c[1]); b.style.setProperty("--c2", c.c[2]);
-    b.style.setProperty("--ink-on", c.dark ? "#F5F5F7" : "#1C1C1E");
-    b.innerHTML = '<div class="face"><div class="tex"></div><div class="emblem">' + MARK + '</div><div class="brand">' + MARK + 'STACH</div><div class="tier"></div><div class="chip"></div><div class="nfc">' + NFC + '</div><div class="since">MEMBER<br>SINCE<b>26</b></div><div class="holder">YOUR NAME</div><div class="shine"></div><div class="sweep"></div></div>';
+    b.type = "button"; b.className = "mcard";
+    // each card is one pre-rendered image, so moving it is just a cheap transform
+    b.innerHTML = '<span class="tilt"><img src="img/cards/' + c.id.toLowerCase() + '.webp" alt="" draggable="false" width="296" height="434"><span class="shine"></span><span class="sweep"></span></span>';
     b.addEventListener("click", function(){ if(i !== active){ go(i); } else { use(); } });
     deck.appendChild(b);
     return b;
@@ -130,7 +129,7 @@
     useBtn.textContent = shown === applied ? (de ? "Ausgewählt: " + nm : "Using " + nm) : (de ? nm + " verwenden" : "Use " + nm);
     useBtn.disabled = shown === applied;
     useBtn.style.opacity = shown === applied ? .55 : 1;
-    els.forEach(function(el, i){ el.querySelector(".tier").textContent = (de ? CARDS[i].de : CARDS[i].name) + (de ? " Karte" : " card"); el.setAttribute("aria-label", (de ? CARDS[i].de : CARDS[i].name)); });
+    els.forEach(function(el, i){ el.setAttribute("aria-label", (de ? CARDS[i].de : CARDS[i].name)); });
   }
   function gapPx(){ return window.innerWidth < 600 ? 118 : 178; }
   function layout(pos){
@@ -138,16 +137,20 @@
     var gap = gapPx();
     els.forEach(function(el, i){
       var off = i - pos, a = Math.abs(off);
-      el.style.zIndex = String(100 - a);
-      el.style.opacity = a > 3 ? "0" : String(1 - a * 0.12);
+      el.style.opacity = a > 3 ? "0" : a > 2.4 ? String(((3 - a) / 0.6).toFixed(2)) : "1";  // solid cards, only the far ones fade
       el.style.pointerEvents = a > 3 ? "none" : "auto";
-      el.style.filter = a > 0.05 ? "saturate(" + (1 - Math.min(a, 1) * 0.15) + ") brightness(" + (1 - a * 0.06) + ")" : "none";
       var sc = a < 1 ? 1 - a * 0.13 : 0.9 - a * 0.03;
-      el.style.transform = "translateX(" + (off * gap) + "px) translateZ(" + (-a * 120) + "px) rotateY(" + (Math.max(-1.6, Math.min(1.6, off)) * -22) + "deg) scale(" + sc + ")";
+      el.style.transform = "translate3d(" + (off * gap).toFixed(1) + "px,0," + (-a * 120).toFixed(1) + "px) rotateY(" + (Math.max(-1.6, Math.min(1.6, off)) * -22).toFixed(2) + "deg) scale(" + sc.toFixed(3) + ")";
+      el.classList.toggle("front", a < 0.5);
       el.style.zIndex = String(100 - Math.round(a * 10));
       el.tabIndex = i === active ? 0 : -1;
     });
     label(Math.round(Math.max(0, Math.min(CARDS.length - 1, pos))));
+  }
+  var pendingPos = null;
+  function schedule(p){
+    if(pendingPos === null) requestAnimationFrame(function(){ var q = pendingPos; pendingPos = null; layout(q); });
+    pendingPos = p;
   }
   function go(i){ active = Math.max(0, Math.min(CARDS.length - 1, i)); layout(); }
   function setAccent(c, animate){
@@ -195,7 +198,7 @@
     drag.lx = e.clientX; drag.lt = now;
     var p = drag.start - dx / gapPx();
     if(p < 0) p = p * 0.35; if(p > CARDS.length - 1) p = CARDS.length - 1 + (p - CARDS.length + 1) * 0.35;  // rubber band at the ends
-    drag.pos = p; layout(p);
+    drag.pos = p; schedule(p);
   });
   function endDrag(){
     if(!drag) return;
@@ -216,25 +219,33 @@
     e.preventDefault();
     if(wheelPos === null){ wheelPos = active; deck.classList.add("dragging"); }
     wheelPos = Math.max(-0.3, Math.min(CARDS.length - 0.7, wheelPos + e.deltaX / gapPx()));
-    layout(wheelPos);
+    schedule(wheelPos);
     clearTimeout(wheelT);
     wheelT = setTimeout(function(){ deck.classList.remove("dragging"); go(Math.round(wheelPos)); wheelPos = null; }, 140);
   }, { passive:false });
-  // the front card tilts towards the pointer, with a moving shine
+  // the front card tilts towards the pointer with a moving shine (transforms only)
+  var tiltReq = null, tiltEv = null;
   deck.addEventListener("pointermove", function(e){
-    if(reduce || (drag && drag.moving) || wheelPos !== null) return;
-    var face = els[active].querySelector(".face"), r = face.getBoundingClientRect();
-    var px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-    if(px < -0.3 || px > 1.3 || py < -0.3 || py > 1.3) return;
-    face.style.setProperty("--ry", ((px - 0.5) * 18).toFixed(2) + "deg");
-    face.style.setProperty("--rx", ((0.5 - py) * 14).toFixed(2) + "deg");
-    face.style.setProperty("--sx", (px * 100).toFixed(1) + "%");
-    face.style.setProperty("--sy", (py * 100).toFixed(1) + "%");
+    if(reduce || e.pointerType === "touch" || (drag && drag.moving) || wheelPos !== null) return;
+    tiltEv = e;
+    if(tiltReq) return;
+    tiltReq = requestAnimationFrame(function(){
+      tiltReq = null;
+      var tilt = els[active].querySelector(".tilt"), r = tilt.getBoundingClientRect();
+      var px = (tiltEv.clientX - r.left) / r.width, py = (tiltEv.clientY - r.top) / r.height;
+      if(px < -0.2 || px > 1.2 || py < -0.2 || py > 1.2){ resetTilt(); return; }
+      tilt.style.transform = "rotateX(" + ((0.5 - py) * 12).toFixed(2) + "deg) rotateY(" + ((px - 0.5) * 16).toFixed(2) + "deg)";
+      var sh = tilt.querySelector(".shine");
+      sh.style.opacity = "1";
+      sh.firstElementChild || (sh.innerHTML = "<i></i>");
+      sh.firstElementChild.style.transform = "translate(" + ((px - 0.5) * 60).toFixed(1) + "%," + ((py - 0.5) * 60).toFixed(1) + "%)";
+    });
   });
-  deck.addEventListener("pointerleave", function(){
-    var face = els[active].querySelector(".face");
-    face.style.setProperty("--ry", "0deg"); face.style.setProperty("--rx", "0deg");
-  });
+  function resetTilt(){
+    els.forEach(function(el){ var t = el.querySelector(".tilt"); t.style.transform = ""; var sh = t.querySelector(".shine"); sh.style.opacity = ""; });
+  }
+  deck.addEventListener("pointerleave", resetTilt);
+  deck.addEventListener("pointerdown", resetTilt);
   document.querySelectorAll(".lang button").forEach(function(b){ b.addEventListener("click", function(){ setTimeout(label, 0); }); });
   window.addEventListener("resize", layout);
   setAccent(CARDS[applied], false);
