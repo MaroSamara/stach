@@ -54,20 +54,34 @@
         dark.style.setProperty("--open", clamp((vh - dr.top) / (vh * 0.7)).toFixed(3));
       }
     }
-    // story: whichever step is nearest the middle of the screen wins
+    // story: the screen follows the scroll continuously. pos is a
+    // fractional step index (1.5 = halfway between step 2 and step 3).
     if(steps.length){
-      var best = 0, bestD = Infinity;
-      steps.forEach(function(st, i){
-        var r = st.getBoundingClientRect(), d = Math.abs(r.top + r.height / 2 - vh / 2);
-        if(d < bestD){ bestD = d; best = i; }
-      });
-      if(best !== current){
-        current = best;
-        steps.forEach(function(st, i){ st.classList.toggle("active", i === best); });
-        screens.forEach(function(im, i){ im.classList.toggle("on", i === best); });
-        dots.forEach(function(d, i){ d.classList.toggle("on", i === best); });
-        if(storyPhone && !reduce){ storyPhone.style.transform = "rotate(" + (best % 2 ? 2.5 : -2.5) + "deg)"; }
+      var mid = vh / 2, centers = steps.map(function(st){ var r = st.getBoundingClientRect(); return r.top + r.height / 2; });
+      var pos = 0;
+      if(mid <= centers[0]) pos = 0;
+      else if(mid >= centers[centers.length - 1]) pos = centers.length - 1;
+      else for(var k = 0; k < centers.length - 1; k++){
+        if(mid >= centers[k] && mid <= centers[k + 1]){ pos = k + (mid - centers[k]) / (centers[k + 1] - centers[k]); break; }
       }
+      // hold each screen for a while, then blend quickly to the next one
+      var seg = Math.floor(pos), f = pos - seg;
+      var e = f < 0.35 ? 0 : f > 0.65 ? 1 : (function(t){ return t * t * (3 - 2 * t); })((f - 0.35) / 0.3);
+      var vis = seg + e;
+      screens.forEach(function(im, i){
+        var d = i - vis, a = Math.abs(d);
+        im.style.opacity = String(Math.max(0, 1 - a));
+        im.style.transform = reduce ? "" : "translateY(" + (d * 6).toFixed(2) + "%) scale(" + (1 - Math.min(a, 1) * 0.05).toFixed(3) + ")";
+        im.style.zIndex = String(10 - Math.round(a * 2));
+      });
+      dots.forEach(function(dot, i){
+        var a = Math.min(1, Math.abs(i - vis));
+        dot.style.width = (7 + (1 - a) * 19).toFixed(1) + "px";
+        dot.style.background = a < 0.5 ? "var(--accent)" : "";
+      });
+      var best = Math.round(vis);
+      if(best !== current){ current = best; steps.forEach(function(st, i){ st.classList.toggle("active", i === best); }); }
+      if(storyPhone && !reduce){ storyPhone.style.transform = "translateY(" + ((pos - 1.5) * -8).toFixed(1) + "px)"; }
     }
   }
   var ticking = false;
@@ -106,31 +120,36 @@
   var applied = Math.max(0, CARDS.findIndex(function(c){ return c.id === (saved || "roseGold"); }));
   var active = applied;
 
-  function label(){
-    var c = CARDS[active], de = isDe();
+  function label(shown){
+    if(shown === undefined) shown = active;
+    var c = CARDS[shown], de = isDe();
     document.getElementById("deck-title").textContent = de ? c.de : c.name;
     document.getElementById("deck-sub").textContent = de ? c.subDe : c.sub;
     var useBtn = document.getElementById("deck-use");
     var nm = de ? c.de : c.name;
-    useBtn.textContent = active === applied ? (de ? "Ausgewählt: " + nm : "Using " + nm) : (de ? nm + " verwenden" : "Use " + nm);
-    useBtn.disabled = active === applied;
-    useBtn.style.opacity = active === applied ? .55 : 1;
+    useBtn.textContent = shown === applied ? (de ? "Ausgewählt: " + nm : "Using " + nm) : (de ? nm + " verwenden" : "Use " + nm);
+    useBtn.disabled = shown === applied;
+    useBtn.style.opacity = shown === applied ? .55 : 1;
     els.forEach(function(el, i){ el.querySelector(".tier").textContent = (de ? CARDS[i].de : CARDS[i].name) + (de ? " Karte" : " card"); el.setAttribute("aria-label", (de ? CARDS[i].de : CARDS[i].name)); });
   }
-  function layout(){
-    var narrow = window.innerWidth < 600, gap = narrow ? 118 : 178;
+  function gapPx(){ return window.innerWidth < 600 ? 118 : 178; }
+  function layout(pos){
+    if(pos === undefined) pos = active;
+    var gap = gapPx();
     els.forEach(function(el, i){
-      var off = i - active, a = Math.abs(off);
+      var off = i - pos, a = Math.abs(off);
       el.style.zIndex = String(100 - a);
       el.style.opacity = a > 3 ? "0" : String(1 - a * 0.12);
       el.style.pointerEvents = a > 3 ? "none" : "auto";
-      el.style.filter = a ? "saturate(.85) brightness(" + (1 - a * 0.06) + ")" : "none";
-      el.style.transform = "translateX(" + (off * gap) + "px) translateZ(" + (-a * 120) + "px) rotateY(" + (off * -22) + "deg) scale(" + (a ? 0.9 - a * 0.03 : 1) + ")";
-      el.tabIndex = a ? -1 : 0;
+      el.style.filter = a > 0.05 ? "saturate(" + (1 - Math.min(a, 1) * 0.15) + ") brightness(" + (1 - a * 0.06) + ")" : "none";
+      var sc = a < 1 ? 1 - a * 0.13 : 0.9 - a * 0.03;
+      el.style.transform = "translateX(" + (off * gap) + "px) translateZ(" + (-a * 120) + "px) rotateY(" + (Math.max(-1.6, Math.min(1.6, off)) * -22) + "deg) scale(" + sc + ")";
+      el.style.zIndex = String(100 - Math.round(a * 10));
+      el.tabIndex = i === active ? 0 : -1;
     });
-    label();
+    label(Math.round(Math.max(0, Math.min(CARDS.length - 1, pos))));
   }
-  function go(i){ active = (i + CARDS.length) % CARDS.length; layout(); }
+  function go(i){ active = Math.max(0, Math.min(CARDS.length - 1, i)); layout(); }
   function setAccent(c, animate){
     root.style.setProperty("--accent", c.acc[0]);
     root.style.setProperty("--accent-2", c.acc[1]);
@@ -157,18 +176,53 @@
     if(e.key === "ArrowRight"){ e.preventDefault(); go(active + 1); }
     if(e.key === "Enter" || e.key === " "){ e.preventDefault(); use(); }
   });
-  // swipe / drag between cards
-  var sx = null, moved = false;
-  deck.addEventListener("pointerdown", function(e){ sx = e.clientX; moved = false; });
-  window.addEventListener("pointerup", function(e){
-    if(sx === null) return;
-    var dx = e.clientX - sx; sx = null;
-    if(Math.abs(dx) > 40){ moved = true; go(active + (dx < 0 ? 1 : -1)); }
+  // drag / swipe: the cards follow your finger, then settle on the nearest one
+  var drag = null, suppressClick = false;
+  deck.addEventListener("pointerdown", function(e){
+    if(e.button !== undefined && e.button !== 0) return;
+    drag = { x:e.clientX, start:active, pos:active, moving:false, lx:e.clientX, lt:performance.now(), v:0, id:e.pointerId };
   });
-  deck.addEventListener("click", function(e){ if(moved){ e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+  deck.addEventListener("pointermove", function(e){
+    if(!drag || e.pointerId !== drag.id) return;
+    var dx = e.clientX - drag.x;
+    if(!drag.moving){
+      if(Math.abs(dx) < 6) return;
+      drag.moving = true; deck.classList.add("dragging");
+      try { deck.setPointerCapture(e.pointerId); } catch(err){}
+    }
+    var now = performance.now(), dt = Math.max(1, now - drag.lt);
+    drag.v = 0.8 * drag.v + 0.2 * ((e.clientX - drag.lx) / dt);
+    drag.lx = e.clientX; drag.lt = now;
+    var p = drag.start - dx / gapPx();
+    if(p < 0) p = p * 0.35; if(p > CARDS.length - 1) p = CARDS.length - 1 + (p - CARDS.length + 1) * 0.35;  // rubber band at the ends
+    drag.pos = p; layout(p);
+  });
+  function endDrag(){
+    if(!drag) return;
+    if(drag.moving){
+      suppressClick = true; setTimeout(function(){ suppressClick = false; }, 60);
+      deck.classList.remove("dragging");
+      go(Math.round(drag.pos - drag.v * 140 / gapPx()));   // a quick flick carries further
+    }
+    drag = null;
+  }
+  deck.addEventListener("pointerup", endDrag);
+  deck.addEventListener("pointercancel", endDrag);
+  deck.addEventListener("click", function(e){ if(suppressClick){ e.stopPropagation(); e.preventDefault(); } }, true);
+  // two-finger trackpad swipe sideways
+  var wheelPos = null, wheelT = null;
+  deck.addEventListener("wheel", function(e){
+    if(Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    if(wheelPos === null){ wheelPos = active; deck.classList.add("dragging"); }
+    wheelPos = Math.max(-0.3, Math.min(CARDS.length - 0.7, wheelPos + e.deltaX / gapPx()));
+    layout(wheelPos);
+    clearTimeout(wheelT);
+    wheelT = setTimeout(function(){ deck.classList.remove("dragging"); go(Math.round(wheelPos)); wheelPos = null; }, 140);
+  }, { passive:false });
   // the front card tilts towards the pointer, with a moving shine
   deck.addEventListener("pointermove", function(e){
-    if(reduce) return;
+    if(reduce || (drag && drag.moving) || wheelPos !== null) return;
     var face = els[active].querySelector(".face"), r = face.getBoundingClientRect();
     var px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
     if(px < -0.3 || px > 1.3 || py < -0.3 || py > 1.3) return;

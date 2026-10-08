@@ -111,3 +111,13 @@ html.lenis, html.lenis body{ height:auto; }
 /* answers open smoothly */
 .faq details[open] p{ animation:faqIn .5s cubic-bezier(.16,1,.3,1); }
 @keyframes faqIn{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:none; } }
+
+/* while dragging, cards follow the finger with no lag */
+.deck{ cursor:grab; }
+.deck.dragging{ cursor:grabbing; }
+.deck.dragging .mcard{ transition:opacity .2s, filter .2s; }
+/* story screens are driven every frame by the scroll position */
+.story-phone .screens img{ transition:none; opacity:0; }
+.story-phone .screens img.on{ opacity:1; }
+.story-phone{ transition:transform .3s linear; }
+.story-dots i{ transition:width .15s linear, background .3s; }
