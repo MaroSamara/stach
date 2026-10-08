@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://www.gstatic.com; connect-src https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com wss://*.firebaseio.com; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Confirm a Stach deal</title>
+<meta name="description" content="For restaurants: confirm a student's Stach discount.">
+<style>
+  :root { --bg:#f5f5f7; --card:#fff; --ink:#1d1d1f; --muted:#6e6e73; --line:rgba(0,0,0,.1); --accent:#1d1d1f; --ok:#248a3d; --warn:#c93400; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#000; --card:#1c1c1e; --ink:#f5f5f7; --muted:#a0a0a5; --line:rgba(255,255,255,.14); --accent:#f5f5f7; --ok:#30d158; --warn:#ff9f0a; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif; }
+  main { max-width:460px; margin:0 auto; padding:32px 16px 48px; }
+  .card { background:var(--card); border-radius:18px; padding:20px; margin-top:16px; }
+  h1 { font-size:26px; margin:0 0 4px; letter-spacing:-.01em; }
+  .muted { color:var(--muted); font-size:15px; }
+  .deal { font-size:44px; font-weight:800; margin:8px 0 0; }
+  label { display:block; font-size:14px; font-weight:600; color:var(--muted); margin:18px 0 6px; }
+  input { width:100%; font:600 22px/1.2 inherit; font-family:inherit; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  input.bad { border-color:var(--warn); }
+  .err { color:var(--warn); font-size:14px; margin-top:6px; min-height:20px; }
+  button { width:100%; margin-top:18px; font:600 17px inherit; font-family:inherit; padding:16px; border:0; border-radius:999px; background:var(--accent); color:var(--bg); cursor:pointer; }
+  button:disabled { opacity:.45; }
+  .ok { color:var(--ok); font-weight:700; font-size:22px; }
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Stach student deal</h1>
+  <div class="muted">For the restaurant: check the deal and enter what the student paid.</div>
+
+  <section class="card" id="status">Checking the code…</section>
+
+  <section class="card hidden" id="form">
+    <div id="place" class="muted"></div>
+    <div class="deal" id="deal"></div>
+    <div class="ok">✓ Valid student deal</div>
+    <label for="amount">Amount paid after the discount</label>
+    <input id="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" maxlength="8">
+    <div class="err" id="err" role="alert"></div>
+    <button id="confirm" disabled>Confirm</button>
+  </section>
+</main>
+
+<script type="module">
+const firebaseConfig = {
+  apiKey: "AIzaSyBT0F7nGBJ4m7iTRmBDoDTQXKpkvcD3lHI",
+  authDomain: "studdybuddy-46b74.firebaseapp.com",
+  projectId: "studdybuddy-46b74",
+  storageBucket: "studdybuddy-46b74.firebasestorage.app",
+  messagingSenderId: "494365355163",
+};
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const ticket = (params.get("t") || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 40);
+let currency = (params.get("cur") || "EUR").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3);
+if (currency.length !== 3) currency = "EUR";
+const status = (msg) => { $("status").textContent = msg; $("status").classList.remove("hidden"); $("form").classList.add("hidden"); };
+
+if (ticket.length < 20) { status("This code isn't complete. Ask the student to open the deal again."); throw new Error("bad ticket"); }
+
+const db = getFirestore(initializeApp(firebaseConfig));
+const ref = doc(db, "redemptions", ticket);
+
+try {
+  await signInAnonymously(getAuth());
+  const snap = await getDoc(ref);
+  if (!snap.exists()) { status("This code isn't valid. Ask the student to open the deal again."); throw new Error("missing"); }
+  const d = snap.data();
+  const created = d.createdAt?.toDate?.() || new Date(0);
+  if (d.status === "redeemed") { status("This code was already used."); throw new Error("used"); }
+  if (Date.now() - created.getTime() > 15 * 60 * 1000) { status("This code has expired. Ask the student to open the deal again."); throw new Error("expired"); }
+  $("place").textContent = d.placeName || "";
+  $("deal").textContent = "−" + Number(d.percentOff) + "%";
+  $("status").classList.add("hidden");
+  $("form").classList.remove("hidden");
+  $("amount").focus();
+} catch (e) {
+  if (!$("status").textContent || $("status").textContent === "Checking the code…") status("Couldn't check the code. Check the internet connection and scan again.");
+}
+
+const parse = () => {
+  const v = Number(($("amount").value || "").replace(",", ".").trim());
+  return Number.isFinite(v) && v > 0 && v < 10000 ? Math.round(v * 100) / 100 : null;
+};
+$("amount").addEventListener("input", () => {
+  const raw = $("amount").value.trim();
+  const ok = parse() !== null;
+  $("amount").classList.toggle("bad", raw !== "" && !ok);
+  $("err").textContent = raw !== "" && !ok ? "Enter the amount, like 8.50" : "";
+  $("confirm").disabled = !ok;
+});
+$("confirm").addEventListener("click", async () => {
+  const amount = parse();
+  if (amount === null) return;
+  $("confirm").disabled = true;
+  try {
+    await updateDoc(ref, { status: "redeemed", amount, redeemedAt: serverTimestamp() });
+    let shown;
+    try { shown = new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount); } catch { shown = amount.toFixed(2); }
+    status("Done ✓ " + shown + " confirmed. The student's app has logged it.");
+  } catch {
+    $("err").textContent = "Couldn't confirm. The code may have expired, ask the student to reopen it.";
+    $("confirm").disabled = false;
+  }
+});
+</script>
+</body>
+</html>
